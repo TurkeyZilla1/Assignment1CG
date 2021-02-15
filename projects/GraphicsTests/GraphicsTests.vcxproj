@@ -110,12 +110,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="src\BackendHandler.h" />
+    <ClInclude Include="src\BloomEffect.h" />
     <ClInclude Include="src\Framebuffer.h" />
     <ClInclude Include="src\LUT.h" />
     <ClInclude Include="src\PostEffect.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\BackendHandler.cpp" />
+    <ClCompile Include="src\BloomEffect.cpp" />
     <ClCompile Include="src\Framebuffer.cpp" />
     <ClCompile Include="src\LUT.cpp" />
     <ClCompile Include="src\main.cpp" />
@@ -155,6 +157,12 @@
     <ProjectReference Include="..\..\modules\toolkit\toolkit.vcxproj">
       <Project>{AB7025F0-1750-A48B-2068-2F628CC60AED}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="res\shaders\BloomComposite.frag.glsl" />
+    <None Include="res\shaders\BloomHighPass.frag.glsl" />
+    <None Include="res\shaders\BlurHorizontal.frag.glsl" />
+    <None Include="res\shaders\BlurVertical.frag.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

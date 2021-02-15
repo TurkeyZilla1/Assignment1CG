@@ -58,6 +58,11 @@ int main() {
 		colorCorrectionShader->LoadShaderPartFromFile("shaders/color_correction_frag.glsl", GL_FRAGMENT_SHADER);
 		colorCorrectionShader->Link();
 
+		/*Shader::sptr bloomShader = Shader::Create();
+		bloomShader->LoadShaderPartFromFile("shaders/passthrough_vert.glsl", GL_VERTEX_SHADER);
+		bloomShader->LoadShaderPartFromFile("shaders/BloomHighPass.frag.glsl", GL_FRAGMENT_SHADER);
+		bloomShader->Link();*/
+
 		glm::vec3 lightPos = glm::vec3(0.0f, 0.0f, 2.0f);
 		glm::vec3 lightCol = glm::vec3(0.9f, 0.85f, 0.5f);
 		float     lightAmbientPow = 0.05f;
@@ -158,6 +163,10 @@ int main() {
 		Texture2D::sptr diffuse2 = Texture2D::LoadFromFile("images/box.bmp");
 		Texture2D::sptr specular = Texture2D::LoadFromFile("images/Stone_001_Specular.png");
 		Texture2D::sptr reflectivity = Texture2D::LoadFromFile("images/box-reflections.bmp");
+
+		Texture2D::sptr lavaChicken = Texture2D::LoadFromFile("images/LavaTexture.png");
+		//texture from https://opengameart.org/content/2-seamless-lava-tiles
+
 		//LUT3D colorCube("cubes/CustomCorrection.cube");
 		LUT3D defaultCube("cubes/Neutral-512.cube"); //default colours
 		//color cubes
@@ -242,6 +251,12 @@ int main() {
 		reflectiveMat->Set("s_Environment", environmentMap);
 		reflectiveMat->Set("u_EnvironmentRotation", glm::mat3(glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1, 0, 0))));
 
+		ShaderMaterial::sptr material2 = ShaderMaterial::Create();
+		material2->Shader = shader;
+		material2->Set("s_Diffuse", lavaChicken);
+		material2->Set("u_Shininess", 8.0f);
+		material2->Set("u_TextureMix", 0.5f);
+
 		GameObject sceneObj = scene->CreateEntity("scene_geo"); 
 		{
 			VertexArrayObject::sptr sceneVao = NotObjLoader::LoadFromFile("Sample.notobj");
@@ -260,14 +275,30 @@ int main() {
 
 		GameObject obj3 = scene->CreateEntity("monkey_tris");
 		{
-			VertexArrayObject::sptr vao = ObjLoader::LoadFromFile("models/ricee.obj");
-			obj3.emplace<RendererComponent>().SetMesh(vao).SetMaterial(reflectiveMat);
-			obj3.get<Transform>().SetLocalPosition(0.0f, 0.0f, 0.0f);
-			BehaviourBinding::BindDisabled<SimpleMoveBehaviour>(obj3);
+			//chicken model from https://opengameart.org/content/chicken-animated
+			VertexArrayObject::sptr vao = ObjLoader::LoadFromFile("models/chickenV2.obj");
+			obj3.emplace<RendererComponent>().SetMesh(vao).SetMaterial(material2);
+			obj3.get<Transform>().SetLocalPosition(0.0f, -4.0f, 0.0f);
+			obj3.get<Transform>().SetLocalRotation(90.0f, 0.0f, 180.0f);
+			obj3.get<Transform>().SetLocalScale(glm::vec3(0.25, 0.25, 0.25));
+
+
+			// Bind returns a smart pointer to the behaviour that was added
+			auto pathing = BehaviourBinding::Bind<FollowPathBehaviour>(obj3);
+			// Set up a path for the object to follow
+			pathing->Points.push_back({ 1.0f, -2.0f, 0.0f });
+			pathing->Points.push_back({ 0.75f, -2.5f, 0.0f });
+			pathing->Points.push_back({ 1.0f, -2.0f, 0.0f });
+			pathing->Points.push_back({ 0.0f, -4.0f, 0.0f });
+			pathing->Points.push_back({ -1.0f, -2.0f, 0.0f });
+			pathing->Points.push_back({ -0.75f, -2.5f, 0.0f });
+			pathing->Points.push_back({ -1.0f, -2.0f, 0.0f });
+			pathing->Points.push_back({ 0.0f, -4.0f, 0.0f });
+			pathing->Speed = 2.0f;
 		}
 
 
-		GameObject obj5 = scene->CreateEntity("cube");
+		/*GameObject obj5 = scene->CreateEntity("cube");
 		{
 			MeshBuilder<VertexPosNormTexCol> builder = MeshBuilder<VertexPosNormTexCol>();
 			MeshFactory::AddCube(builder, glm::vec3(0.0f), glm::vec3(1.0f), glm::vec3(0.0f));
@@ -276,10 +307,10 @@ int main() {
 			obj5.emplace<RendererComponent>().SetMesh(vao).SetMaterial(reflectiveMat);
 			obj5.get<Transform>().SetLocalPosition(-4.0f, 0.0f, 2000.0f);
 			BehaviourBinding::BindDisabled<SimpleMoveBehaviour>(obj5);
-		}
+		}*/
 		
 
-		GameObject obj4 = scene->CreateEntity("moving_box");
+		/*GameObject obj4 = scene->CreateEntity("moving_box");
 		{
 			// Build a mesh
 			MeshBuilder<VertexPosNormTexCol> builder = MeshBuilder<VertexPosNormTexCol>();
@@ -297,9 +328,9 @@ int main() {
 			pathing->Points.push_back({ 4.0f,  4.0f, 0.0f });
 			pathing->Points.push_back({ -4.0f,  4.0f, 0.0f });
 			pathing->Speed = 2.0f;
-		}
+		}*/
 
-		GameObject obj6 = scene->CreateEntity("following_monkey");
+		/*GameObject obj6 = scene->CreateEntity("following_monkey");
 		{
 			VertexArrayObject::sptr vao = ObjLoader::LoadFromFile("models/scarecroww.obj");
 			obj6.emplace<RendererComponent>().SetMesh(vao).SetMaterial(reflectiveMat);
@@ -314,7 +345,7 @@ int main() {
 			pathing->Points.push_back({ 0.0f, -2.5f, 2.5f });
 			pathing->Points.push_back({ 0.0f, -2.5f, 2.5f });
 			pathing->Speed = 2.0f;
-		}
+		}*/
 
 	
 
@@ -345,6 +376,15 @@ int main() {
 			colorCorrect->AddDepthTarget();
 			colorCorrect->Init(width, height);
 		}
+
+		/*Framebuffer* bloom;
+		GameObject bloomObj = scene->CreateEntity("Bloom");
+		{
+			bloom = &bloomObj.emplace<Framebuffer>();
+			bloom->AddColorTarget(GL_RGBA8);
+			bloom->AddDepthTarget();
+			bloom->Init(width, height);
+		}*/
 
 		#pragma endregion 
 		//////////////////////////////////////////////////////////////////////////////////////////
@@ -445,9 +485,6 @@ int main() {
 
 			});
 
-	
-
-
 
 		// Initialize our timing instance and grab a reference for our use
 		Timing& time = Timing::Instance();
@@ -491,6 +528,7 @@ int main() {
 
 			// Clear the screen
 			colorCorrect->Clear();
+			//bloom->Clear();
 
 			glClearColor(0.08f, 0.17f, 0.31f, 1.0f);
 			glEnable(GL_DEPTH_TEST);
@@ -531,6 +569,7 @@ int main() {
 			ShaderMaterial::sptr currentMat = nullptr;
 			
 			colorCorrect->Bind();
+			//bloom->Bind();
 
 			// Iterate over the render group components and draw them
 			renderGroup.each( [&](entt::entity e, RendererComponent& renderer, Transform& transform) {
@@ -550,6 +589,8 @@ int main() {
 			});
 
 			colorCorrect->Unbind();
+			//bloom->Unbind();
+
 			colorCorrectionShader->Bind();
 
 			colorCorrect->BindColorAsTexture(0, 0);
@@ -591,6 +632,11 @@ int main() {
 
 			colorCorrectionShader->UnBind();
 
+			/*bloomShader->Bind();
+			bloom->BindColorAsTexture(0, 0);
+			bloom->DrawFullscreenQuad();
+			bloom->UnbindTexture(0);
+			bloomShader->UnBind();*/
 
 			// Draw our ImGui content
 			BackendHandler::RenderImGui();

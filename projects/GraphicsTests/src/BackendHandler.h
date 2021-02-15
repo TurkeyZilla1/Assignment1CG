@@ -3,6 +3,7 @@
 #include <LUT.h>
 #include <Framebuffer.h>
 #include <PostEffect.h>
+//#include <BloomEffect.h>
 #include <LUT.h>
 
 #include <iostream>
